@@ -1888,19 +1888,26 @@ details small {
 .fullfan {
   position: absolute;
   left: 50%;
-  top: 68px;
-  width: 100%;
-  height: 260px;
+  top: 44px;
+  width: min(1120px, 94%);
+  height: 250px;
+  display: grid;
+  grid-template-columns: repeat(18, minmax(34px, 1fr));
+  align-content: start;
+  justify-items: center;
+  gap: 10px 6px;
+  transform: translateX(-50%) rotateX(7deg);
   transform-style: preserve-3d;
+  perspective: 1200px;
 }
 .fullfan > button {
-  position: absolute;
-  left: 50%;
-  top: 0;
+  position: relative;
+  width: 100%;
+  min-width: 0;
   border: 0;
   background: none;
   padding: 0;
-  transform-origin: 50% 250%;
+  transform-origin: 50% 100%;
   opacity: 0;
   animation: fanBurst 0.8s cubic-bezier(0.18, 0.8, 0.2, 1) forwards;
   transition:
@@ -1909,18 +1916,52 @@ details small {
     opacity 0.25s;
 }
 .fullfan > button:not(:disabled):hover {
-  translate: 0 -30px;
+  z-index: 4;
+  translate: 0 -12px;
   filter: drop-shadow(0 0 18px #d0a8ff);
+}
+.fullfan > button:not(:disabled):focus-visible {
+  z-index: 5;
+  outline: 2px solid #e7ca8d;
+  outline-offset: 4px;
+  border-radius: 9px;
 }
 .fullfan > button:disabled {
   cursor: default;
 }
 .fullfan .back {
-  width: 74px;
-  height: 112px;
+  width: min(100%, 52px);
+  height: auto;
+  aspect-ratio: 74 / 112;
+  margin: auto;
+  border-radius: 8px;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
+}
+.fullfan > button:nth-child(6n + 1) .back {
+  transform: rotate(-2deg) translateY(3px);
+}
+.fullfan > button:nth-child(6n + 2) .back {
+  transform: rotate(1.5deg);
+}
+.fullfan > button:nth-child(6n + 3) .back {
+  transform: rotate(-1deg) translateY(1px);
+}
+.fullfan > button:nth-child(6n + 4) .back {
+  transform: rotate(2deg) translateY(2px);
+}
+.fullfan > button:not(:disabled):hover .back,
+.fullfan > button:not(:disabled):focus-visible .back {
+  transform: rotate(0) scale(1.08);
+  box-shadow:
+    0 20px 40px #000a,
+    0 0 22px #a870ff88,
+    inset 0 0 0 5px #171020,
+    inset 0 0 0 6px #e7ca8d77;
 }
 .fullfan .back span {
-  font-size: 19px;
+  font-size: 16px;
 }
 .chosen3d {
   position: absolute;
@@ -1977,13 +2018,11 @@ details small {
 @keyframes fanBurst {
   from {
     opacity: 0;
-    translate: 0 -90px;
-    scale: 0.7;
+    transform: translate3d(0, -70px, 90px) rotateY(68deg) scale(0.68);
   }
   to {
     opacity: 1;
-    translate: 0 0;
-    scale: 1;
+    transform: translate3d(0, 0, 0) rotateY(0) scale(1);
   }
 }
 @keyframes pickedFlip {
@@ -2461,18 +2500,29 @@ details small {
     flex: 0 0 132px;
   }
   .ritualarena {
-    min-height: 420px;
+    min-height: 540px;
   }
   .ritualhalo {
     width: 360px;
     height: 360px;
   }
   .fullfan {
-    top: 75px;
+    top: 38px;
+    width: calc(100% - 20px);
+    height: auto;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 8px 4px;
+    transform: translateX(-50%) rotateX(5deg);
   }
   .fullfan .back {
-    width: 57px;
-    height: 87px;
+    width: 100%;
+    max-width: 38px;
+    height: auto;
+    aspect-ratio: 74 / 112;
+    border-radius: 6px;
+  }
+  .fullfan .back span {
+    font-size: 12px;
   }
   .chosen3d {
     justify-content: flex-start;
