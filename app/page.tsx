@@ -172,19 +172,52 @@ function OracleReading({
   result,
   question,
   deck,
+  path,
   onReset,
   saved,
 }: {
   result: ReturnType<typeof read>;
   question: string;
   deck: Deck;
+  path: "virtual" | "physical";
   onReset: () => void;
   saved: string;
 }) {
   const [phase, setPhase] = useState(0);
   const [follow, setFollow] = useState("");
   const [followAnswer, setFollowAnswer] = useState("");
+  const [followCardAnalysis, setFollowCardAnalysis] = useState<
+    Array<{ name?: string; role?: string; analysis?: string }>
+  >([]);
+  const [needsClarifier, setNeedsClarifier] = useState(false);
+  const [helperCards, setHelperCards] = useState<Card[]>([]);
+  const [usedIds, setUsedIds] = useState<string[]>(
+    result.details.map((d) => d.card.id),
+  );
+  const [assistMode, setAssistMode] = useState<"manual" | "camera">("manual");
+  const [assistCamera, setAssistCamera] = useState(false);
+  const [shuffleRound, setShuffleRound] = useState(0);
   const [asking, setAsking] = useState(false);
+  const remainingCards = useMemo(
+    () =>
+      [...decks[deck]]
+        .filter(
+          (card) =>
+            !usedIds.includes(card.id) &&
+            !helperCards.some((x) => x.id === card.id),
+        )
+        .sort((a, b) =>
+          path === "virtual"
+            ? (([...a.id].reduce((n, c) => n + c.charCodeAt(0), 0) *
+                (shuffleRound + 7)) %
+                97) -
+              (([...b.id].reduce((n, c) => n + c.charCodeAt(0), 0) *
+                (shuffleRound + 7)) %
+                97)
+            : a.name.localeCompare(b.name, "vi"),
+        ),
+    [deck, helperCards, path, shuffleRound, usedIds],
+  );
   useEffect(() => {
     if (phase >= 6) return;
     const timer = window.setTimeout(
@@ -204,6 +237,7 @@ function OracleReading({
           question,
           deck,
           cards: result.details.map((d) => d.card),
+          extraCards: helperCards,
           base: result,
           followUp: follow,
           previousAnswer: [
@@ -215,13 +249,28 @@ function OracleReading({
         }),
       });
       const data = (await response.json()) as {
-        followUp?: { answer?: string; caution?: string };
+        followUp?: {
+          answer?: string;
+          caution?: string;
+          needsClarifier?: boolean;
+          cardAnalysis?: Array<{
+            name?: string;
+            role?: string;
+            analysis?: string;
+          }>;
+        };
         error?: string;
       };
       if (!response.ok) throw Error(data.error);
       setFollowAnswer(
         `${data.followUp?.answer || ""}${data.followUp?.caution ? `\n\nLưu ý: ${data.followUp.caution}` : ""}`,
       );
+      setFollowCardAnalysis(data.followUp?.cardAnalysis || []);
+      setNeedsClarifier(Boolean(data.followUp?.needsClarifier));
+      setUsedIds((ids) => [
+        ...new Set([...ids, ...helperCards.map((card) => card.id)]),
+      ]);
+      setHelperCards([]);
     } catch (e) {
       setFollowAnswer(
         e instanceof Error ? e.message : "Không thể trả lời tiếp lúc này.",
@@ -372,11 +421,113 @@ function OracleReading({
           <div className="followup">
             <em>HỎI TIẾP TRÊN TRẢI BÀI NÀY</em>
             <h3>Bạn còn muốn hỏi rõ điều gì?</h3>
+            <div className="deckcounter">
+              <span>ĐÃ DÙNG {usedIds.length}/36 LÁ</span>
+              <span>CÒN {36 - usedIds.length} LÁ CHƯA DÙNG</span>
+            </div>
             <textarea
               value={follow}
               onChange={(e) => setFollow(e.target.value)}
               placeholder="Ví dụ: Khoản tiền nào đang là rủi ro lớn nhất, và tôi nên xử lý trước ra sao?"
             />
+            <div className="clarifier">
+              <header>
+                <div>
+                  <small>LÁ TRỢ GIẢI NGHĨA</small>
+                  <h4>
+                    {path === "virtual"
+                      ? "Bóc thêm từ phần bài chưa dùng"
+                      : "Nhập thêm lá từ bộ bài thật"}
+                  </h4>
+                </div>
+                <b>{helperCards.length}/3 LÁ</b>
+              </header>
+              {path === "physical" && (
+                <div className="assistmodes">
+                  <button
+                    className={assistMode === "manual" ? "on" : ""}
+                    onClick={() => setAssistMode("manual")}
+                  >
+                    ◎ Nhập tay
+                  </button>
+                  <button
+                    className={assistMode === "camera" ? "on" : ""}
+                    onClick={() => setAssistMode("camera")}
+                  >
+                    ⌗ Camera
+                  </button>
+                </div>
+              )}
+              {path === "virtual" ? (
+                <>
+                  <div className="assistdeck">
+                    {remainingCards.map((card, i) => (
+                      <button
+                        key={`${shuffleRound}-${card.id}`}
+                        disabled={helperCards.length >= 3}
+                        onClick={() =>
+                          setHelperCards((cards) => [...cards, card])
+                        }
+                        aria-label={`Bóc lá chưa dùng ${i + 1}`}
+                      >
+                        <Back />
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    className="reshuffle"
+                    onClick={() => {
+                      setHelperCards([]);
+                      setShuffleRound((x) => x + 1);
+                    }}
+                  >
+                    ⤨ Mặt bài tối nghĩa — xào lại phần bài chưa dùng
+                  </button>
+                </>
+              ) : assistMode === "manual" ? (
+                <div className="assistpicker">
+                  {remainingCards.map((card) => (
+                    <Face
+                      key={card.id}
+                      c={card}
+                      small
+                      onClick={() =>
+                        helperCards.length < 3 &&
+                        setHelperCards((cards) => [...cards, card])
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <button
+                  className="cameraassist"
+                  onClick={() => setAssistCamera(true)}
+                >
+                  ⌗ Mở camera để nhận diện lá trợ nghĩa
+                </button>
+              )}
+              <div className="helpercards">
+                {helperCards.map((card, i) => (
+                  <div key={card.id}>
+                    <Face c={card} small />
+                    <button
+                      onClick={() =>
+                        setHelperCards((cards) =>
+                          cards.filter((x) => x.id !== card.id),
+                        )
+                      }
+                    >
+                      ×
+                    </button>
+                    <small>Trợ nghĩa {i + 1}</small>
+                  </div>
+                ))}
+              </div>
+              <p>
+                Lá đã dùng trong trải chính và các lượt hỏi tiếp sẽ tự động bị
+                loại, không thể xuất hiện lại trong phiên này.
+              </p>
+            </div>
             <button
               className="primary"
               onClick={askFollow}
@@ -388,7 +539,42 @@ function OracleReading({
               <article>
                 <small>THẦY LUẬN TIẾP</small>
                 <p>{followAnswer}</p>
+                {followCardAnalysis.map((item, i) => (
+                  <div className="deepcard" key={`${item.name}-${i}`}>
+                    <b>{item.name}</b>
+                    <small>{item.role}</small>
+                    <p>{item.analysis}</p>
+                  </div>
+                ))}
+                {needsClarifier && (
+                  <button
+                    className="clarifyagain"
+                    onClick={() => {
+                      setFollowAnswer("");
+                      setFollowCardAnalysis([]);
+                    }}
+                  >
+                    ✦ Mạch còn tối nghĩa — bổ sung thêm lá trợ nghĩa
+                  </button>
+                )}
               </article>
+            )}
+            {assistCamera && (
+              <CameraBox
+                deck={deck}
+                onAdd={(cards) => {
+                  const fresh = cards.filter(
+                    (card) =>
+                      !usedIds.includes(card.id) &&
+                      !helperCards.some((x) => x.id === card.id),
+                  );
+                  setHelperCards((current) =>
+                    [...current, ...fresh].slice(0, 3),
+                  );
+                  setAssistCamera(false);
+                }}
+                onClose={() => setAssistCamera(false)}
+              />
             )}
           </div>
           <p className="disclaimer">
@@ -468,9 +654,23 @@ export default function Home() {
         });
         if (response.ok) {
           const data = (await response.json()) as {
-            result?: Partial<ReturnType<typeof read>>;
+            result?: Partial<ReturnType<typeof read>> & {
+              cardAnalysis?: Array<{
+                name?: string;
+                position?: string;
+                analysis?: string;
+              }>;
+            };
           };
-          if (data.result) final = { ...base, ...data.result };
+          if (data.result) {
+            const deepDetails = base.details.map((detail, i) => ({
+              ...detail,
+              text: data.result?.cardAnalysis?.[i]?.analysis || detail.text,
+              position:
+                data.result?.cardAnalysis?.[i]?.position || detail.position,
+            }));
+            final = { ...base, ...data.result, details: deepDetails };
+          }
         }
       } catch {}
       setResult(final);
@@ -651,30 +851,25 @@ export default function Home() {
                     }}
                   >
                     <i>
-                      {Array.from(
-                        { length: Math.min(s.count, 9) },
-                        (_, i) => (
-                          <b key={i} />
-                        ),
-                      )}
+                      {Array.from({ length: Math.min(s.count, 9) }, (_, i) => (
+                        <b key={i} />
+                      ))}
                     </i>
                     <strong>{s.name}</strong>
                     <small>{s.note}</small>
                   </button>
                 ))}
             </div>
-            <div
-              className={`ritualarena ${ritualSpreadChosen ? "ready" : ""}`}
-            >
+            <div className={`ritualarena ${ritualSpreadChosen ? "ready" : ""}`}>
               <div className="ritualhalo" />
               <div className="fullfan">
-                {Array.from({ length: 24 }, (_, i) => (
+                {Array.from({ length: pool.length }, (_, i) => (
                   <button
                     key={i}
                     disabled={!ritualSpreadChosen || chosen.length >= count}
                     onClick={drawVirtual}
                     style={{
-                      transform: `translateX(-50%) rotate(${(i - 11.5) * 5.5}deg) translateY(${Math.abs(i - 11.5) * 2.4}px)`,
+                      transform: `translateX(-50%) rotate(${(i - (pool.length - 1) / 2) * (96 / Math.max(1, pool.length - 1))}deg) translateY(${Math.abs(i - (pool.length - 1) / 2) * 1.35}px)`,
                       animationDelay: `${i * 35}ms`,
                     }}
                     aria-label={`Chọn lá bài úp ${i + 1}`}
@@ -684,17 +879,19 @@ export default function Home() {
                 ))}
               </div>
               <div className="chosen3d">
-                {Array.from({ length: ritualSpreadChosen ? count : 0 }, (_, i) =>
-                  chosen[i] ? (
-                    <div className="pickedcard" key={chosen[i].id}>
-                      <Face c={chosen[i]} small={count > 9} />
-                      <small>{i + 1}</small>
-                    </div>
-                  ) : (
-                    <div className="pickedempty" key={i}>
-                      {i + 1}
-                    </div>
-                  ),
+                {Array.from(
+                  { length: ritualSpreadChosen ? count : 0 },
+                  (_, i) =>
+                    chosen[i] ? (
+                      <div className="pickedcard" key={chosen[i].id}>
+                        <Face c={chosen[i]} small={count > 9} />
+                        <small>{i + 1}</small>
+                      </div>
+                    ) : (
+                      <div className="pickedempty" key={i}>
+                        {i + 1}
+                      </div>
+                    ),
                 )}
               </div>
             </div>
@@ -899,6 +1096,7 @@ export default function Home() {
           result={result}
           question={question}
           deck={deck}
+          path={path}
           onReset={reset}
           saved={saved}
         />
