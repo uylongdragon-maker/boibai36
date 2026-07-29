@@ -1880,7 +1880,9 @@ details small {
   transform: translate(-50%, -50%) rotateX(72deg);
   border: 1px solid #d7ba7b38;
   border-radius: 50%;
-  box-shadow: 0 0 80px #9761f433, inset 0 0 60px #d7ba7b14;
+  box-shadow:
+    0 0 80px #9761f433,
+    inset 0 0 60px #d7ba7b14;
   animation: ringPulse 4s ease-in-out infinite;
 }
 .fullfan {
@@ -1901,7 +1903,10 @@ details small {
   transform-origin: 50% 250%;
   opacity: 0;
   animation: fanBurst 0.8s cubic-bezier(0.18, 0.8, 0.2, 1) forwards;
-  transition: translate 0.25s, filter 0.25s, opacity 0.25s;
+  transition:
+    translate 0.25s,
+    filter 0.25s,
+    opacity 0.25s;
 }
 .fullfan > button:not(:disabled):hover {
   translate: 0 -30px;
@@ -2110,6 +2115,176 @@ details small {
   white-space: pre-line;
   font: 13px/1.8 Georgia;
   color: #c8bdcf;
+}
+.deckcounter {
+  display: flex;
+  gap: 8px;
+  margin: -5px 0 14px;
+}
+.deckcounter span {
+  border: 1px solid #ffffff12;
+  border-radius: 99px;
+  padding: 7px 10px;
+  color: #85798e;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+.clarifier {
+  margin: 14px 0;
+  border: 1px solid #a873e52e;
+  border-radius: 15px;
+  padding: 15px;
+  background: #08050d8c;
+}
+.clarifier > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+.clarifier > header small {
+  color: var(--gold);
+  font-size: 7px;
+  letter-spacing: 0.15em;
+}
+.clarifier > header h4 {
+  font: 18px Georgia;
+  margin: 6px 0 0;
+}
+.clarifier > header b {
+  color: #bcaec7;
+  font-size: 8px;
+}
+.clarifier > p {
+  color: #6e6377;
+  font-size: 8px;
+  line-height: 1.55;
+  margin: 12px 0 0;
+}
+.assistmodes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-bottom: 11px;
+}
+.assistmodes button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: none;
+  color: #7e7287;
+  font-size: 8px;
+}
+.assistmodes button.on {
+  background: #9761f420;
+  color: #fff;
+  border-color: #9761f455;
+}
+.assistdeck {
+  min-height: 135px;
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 9px 6px 14px;
+  perspective: 900px;
+}
+.assistdeck > button {
+  flex: 0 0 48px;
+  border: 0;
+  background: none;
+  padding: 0;
+  transition:
+    translate 0.2s,
+    filter 0.2s;
+}
+.assistdeck > button:not(:disabled):hover {
+  translate: 0 -10px;
+  filter: drop-shadow(0 0 10px #bd8fff);
+}
+.assistdeck .back {
+  width: 48px;
+  height: 74px;
+  border-radius: 7px;
+}
+.assistdeck .back span {
+  font-size: 13px;
+}
+.reshuffle,
+.cameraassist,
+.clarifyagain {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #d7ba7b30;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #d7ba7b0c, #9761f410);
+  color: #c4b2d0;
+  font-size: 8px;
+}
+.assistpicker {
+  max-height: 255px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(59px, 1fr));
+  gap: 8px;
+  padding: 8px 2px;
+}
+.assistpicker .face {
+  justify-self: center;
+}
+.helpercards {
+  min-height: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 13px;
+}
+.helpercards > div {
+  position: relative;
+}
+.helpercards > div > button {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  width: 19px;
+  height: 19px;
+  border: 1px solid #ffffff25;
+  border-radius: 50%;
+  background: #21152b;
+  padding: 0;
+}
+.helpercards > div > small {
+  display: block;
+  text-align: center;
+  color: #8c7e96;
+  font-size: 7px;
+  margin-top: 6px;
+}
+.deepcard {
+  margin-top: 13px;
+  border: 1px solid #ffffff10;
+  border-radius: 11px;
+  padding: 13px;
+  background: #ffffff03;
+}
+.deepcard b,
+.deepcard small {
+  display: block;
+}
+.deepcard b {
+  color: var(--gold);
+  font: 16px Georgia;
+}
+.deepcard small {
+  margin-top: 5px;
+  color: #8d7f97 !important;
+  line-height: 1.5;
+}
+.deepcard p {
+  margin-bottom: 0;
+}
+.clarifyagain {
+  margin-top: 14px;
 }
 @keyframes dustRise {
   0% {
