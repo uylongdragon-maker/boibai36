@@ -869,7 +869,6 @@ export default function Home() {
                     disabled={!ritualSpreadChosen || chosen.length >= count}
                     onClick={drawVirtual}
                     style={{
-                      transform: `translateX(-50%) rotate(${(i - (pool.length - 1) / 2) * (96 / Math.max(1, pool.length - 1))}deg) translateY(${Math.abs(i - (pool.length - 1) / 2) * 1.35}px)`,
                       animationDelay: `${i * 35}ms`,
                     }}
                     aria-label={`Chọn lá bài úp ${i + 1}`}
